@@ -94,6 +94,8 @@ REDIS_REQUIRED = [
 
 AWS_REQUIRED = ["boto3>=1.17.0,<=1.20.23", "docker>=5.0.2", "s3fs>=0.4.0,<=2022.01.0"]
 
+BYTEWAX_REQUIRED = ["bytewax==0.9.0", "docker>=5.0.2", "kubernetes<=20.13.0"]
+
 SNOWFLAKE_REQUIRED = [
     "snowflake-connector-python[pandas]>=2.7.3,<=2.7.8",
 ]
@@ -171,6 +173,7 @@ CI_REQUIRED = (
     + GCP_REQUIRED
     + REDIS_REQUIRED
     + AWS_REQUIRED
+    + BYTEWAX_REQUIRED
     + SNOWFLAKE_REQUIRED
     + SPARK_REQUIRED
     + POSTGRES_REQUIRED
@@ -428,12 +431,18 @@ class build_ext(_build_ext):
         print(f"CWD: {os.getcwd()}")
 
         destination = os.path.dirname(os.path.abspath(self.get_ext_fullpath(ext.name)))
-        subprocess.check_call(["go", "install", "golang.org/x/tools/cmd/goimports"],
-                              env={"PATH": bin_path, **go_env})
-        subprocess.check_call(["go", "get", "github.com/go-python/gopy@v0.4.0"],
-                              env={"PATH": bin_path, **go_env})
-        subprocess.check_call(["go", "install", "github.com/go-python/gopy"],
-                              env={"PATH": bin_path, **go_env})
+        subprocess.check_call(
+            ["go", "install", "golang.org/x/tools/cmd/goimports"],
+            env={"PATH": bin_path, **go_env},
+        )
+        subprocess.check_call(
+            ["go", "get", "github.com/go-python/gopy@v0.4.0"],
+            env={"PATH": bin_path, **go_env},
+        )
+        subprocess.check_call(
+            ["go", "install", "github.com/go-python/gopy"],
+            env={"PATH": bin_path, **go_env},
+        )
         subprocess.check_call(
             [
                 "gopy",
@@ -445,7 +454,11 @@ class build_ext(_build_ext):
                 "-no-make",
                 *ext.sources,
             ],
-            env={"PATH": bin_path, "CGO_LDFLAGS_ALLOW": ".*", **go_env,},
+            env={
+                "PATH": bin_path,
+                "CGO_LDFLAGS_ALLOW": ".*",
+                **go_env,
+            },
         )
 
     def copy_extensions_to_source(self):
@@ -489,6 +502,7 @@ setup(
         "ci": CI_REQUIRED,
         "gcp": GCP_REQUIRED,
         "aws": AWS_REQUIRED,
+        "bytewax": BYTEWAX_REQUIRED,
         "redis": REDIS_REQUIRED,
         "snowflake": SNOWFLAKE_REQUIRED,
         "spark": SPARK_REQUIRED,
